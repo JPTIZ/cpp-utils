@@ -1,8 +1,9 @@
-#include <string>
-#include <cstdint>
-
 #ifndef TO16BPP_BMP_H
 #define TO16BPP_BMP_H
+
+#include <string>
+#include <cstdint>
+#include <vector>
 
 struct RGB {
     std::uint8_t r;
@@ -26,11 +27,13 @@ struct BMP {
     std::uint32_t ver_res;
     std::uint32_t color_count;
     std::uint32_t important_color_count;
+    std::vector<std::uint16_t> palette;
+    std::vector<std::uint8_t> data;
 };
 
 void load_bmp(BMP&, const std::string& filename);
 void show_bmp_data(BMP&);
 void convert_to_16bpp(BMP&);
-
+void save_header(BMP& bmp, const std::string& filename);
 
 #endif

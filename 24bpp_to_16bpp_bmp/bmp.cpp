@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <map>
+#include <algorithm>
 
 template<typename T>
 void load4(std::istream& is, T& field) {
@@ -32,17 +34,63 @@ void load_bmp(BMP& bmp, const std::string& filename) {
     load4(is, bmp.important_color_count);
     is.seekg(bmp.offset);
     std::cout << "remaining bytes: \n";
-    //while (!is.eof()) {
-        for (auto i = 0u; i < bmp.width*bmp.height; ++i) {
-            std::cout <<
-                "{"
-                << ((unsigned int)is.get()*(2<<5)/(2<<8)) << ",\t"
-                << ((unsigned int)is.get()*(2<<5)/(2<<8)) << ",\t"
-                << ((unsigned int)is.get()*(2<<5)/(2<<8)) <<
-                "\t} ";
+    std::map<std::uint16_t, std::uint8_t> palette;
+    auto& colors = bmp.palette;
+    auto& data = bmp.data;
+    for (auto i = 0u; i < bmp.width*bmp.height; ++i) {
+        auto r = ((unsigned int)is.get()*(2<<5)/(2<<8));
+        auto g = ((unsigned int)is.get()*(2<<5)/(2<<8));
+        auto b = ((unsigned int)is.get()*(2<<5)/(2<<8));
+        std::uint16_t pixel = r | (g<<5) | (b<<10);
+        if (not palette.count(pixel)) {
+            std::cout << "inserting {"
+                << r << " , "
+                << g << " , "
+                << b << "} to palette" << std::endl;
+            colors.push_back(pixel);
+            palette.insert(
+                    std::pair<std::uint16_t, std::uint8_t>(
+                        pixel, colors.size()-1)
+                    );
         }
-        std::cout << std::endl;
-    //}
+        data.push_back(palette[pixel]);
+    }
+    // 180flip
+
+    for (auto i = 0u; i < bmp.width; ++i) {
+        for (auto j = 0u; j < bmp.height/2; ++j) {
+            std::cout << "swap["
+                << i << ", "
+                << j << "] <-> ["
+                << i << ", "
+                << (bmp.height - (j+1))
+                << "]" << std::endl;
+            std::swap(
+                    data[i + bmp.width * j],
+                    data[i + bmp.width * (bmp.height - (j + 1))]
+                    );
+        }
+    }
+
+    std::cout << "palette: " << std::endl;
+    auto i = 0u;
+    for (auto color : bmp.palette) {
+        std::cout << "\t"
+            << i << ": \t{\t"
+            << ((color>>10)&31) << ", \t"
+            << ((color>>5)&31) << ", \t"
+            << (color&31) << "\t}"
+            << std::endl;
+        ++i;
+    }
+    i = 0u;
+    std::cout << "data: ";
+    for (auto index : bmp.data) {
+        if (i % bmp.width == 0) std::cout << std::endl;
+        std::cout << (int)index << " : ";
+        ++i;
+    }
+    std::cout << std::endl;
 }
 
 void show_bmp_data(BMP& bmp) {
@@ -61,4 +109,42 @@ void show_bmp_data(BMP& bmp) {
 }
 
 void convert_to_16bpp(BMP& bmp) {
+    std::cout << "conversion is done on loading (but shouldn't)" << std::endl;
+}
+
+void save_header(BMP& bmp, const std::string& filename) {
+    std::cout << "saving header..." << std::endl;
+    std::ofstream os{filename+".h", std::ios::binary};
+    std::string filename_{filename};
+    std::transform(
+            filename_.begin(),
+            filename_.end(),
+            filename_.begin(),
+            ::toupper);
+    auto guard_name = "GBA_GENERATED_BMP_" + filename_ + "_H";
+    os << "#ifndef " << guard_name
+        << "\n#define " << guard_name
+        << "\nconst auto " << filename_ << "_palette = {\n  ";
+    auto i = 0u;
+    for (auto it : bmp.palette) {
+        if (i < bmp.palette.size()-1) {
+            os << it << ", ";
+            if (i+1 % 40 == 0) os << "\n    ";
+        } else {
+            os << it << "\n};\n";
+        }
+        ++i;
+    }
+    os << "\nconst auto " << filename_ << "_data = {\n  ";
+    i = 1u;
+    for (auto it : bmp.data) {
+        if (i < bmp.data.size()) {
+            os << (unsigned int)it << ", ";
+            if (i % 20 == 0) os << "\n  ";
+        } else {
+            os << (unsigned int)it << "\n};\n\n";
+        }
+        ++i;
+    }
+    os << "\n#endif\n";
 }

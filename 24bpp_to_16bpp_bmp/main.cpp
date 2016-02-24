@@ -16,6 +16,7 @@ int main(int argc, const char* argv[]) {
     load_bmp(bmp, argv[1]);
     show_bmp_data(bmp);
     convert_to_16bpp(bmp);
+    save_header(bmp, argv[1]);
     nice();
     return 0;
 }
