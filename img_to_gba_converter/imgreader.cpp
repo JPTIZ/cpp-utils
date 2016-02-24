@@ -49,7 +49,8 @@ void index_bitmap_palette(const resources::image::BMP& bmp,
         unsigned int r = (original & 0xFF) * ratio;
         unsigned int g = ((original>>8) & 0xFF) * ratio;
         unsigned int b = ((original>>16) & 0xFF) * ratio;
-        auto entry = r | (g << 5) | (b << 10);
+        std::cout << "original = " << (original) << " - [" << r << ";" << g << ";" << b << "]\n";
+        auto entry = r | (g << 8) | (b << 16);
         palette.insert(entry);
         data.push_back(std::distance(std::begin(palette), palette.find(entry)));
     }
@@ -60,7 +61,7 @@ void save_header(const std::set<std::uint32_t>& palette,
         const std::string& filename_) {
     std::cout << "saving file: " << filename_ << ".h\n";
     std::ofstream os{filename_+".h", std::ios::binary};
-    auto filename{filename_};
+    auto filename = filename_;
     std::transform(filename.begin(), filename.end(), filename.begin(), ::toupper);
     auto guard_name = "GBA_GENERATED_BMP_" + filename + "_H";
     os << "#ifndef " << guard_name
@@ -69,9 +70,11 @@ void save_header(const std::set<std::uint32_t>& palette,
     auto i = 0u;
     for (auto it : palette) {
         if (i < palette.size()-1) {
+            //os << "[" << (it & 0xFF) << ";" << ((it>>8)&0xFF) << ";" << ((it>>16)&0xFF) << "]" << ", ";
             os << it << ", ";
             if (i+1 % 40 == 0) os << "\n    ";
         } else {
+            //os << "[" << (it & 0xFF) << ";" << ((it>>8)&0xFF) << ";" << ((it>>16)&0xFF) << "]" << ", ";
             os << it << "\n};\n";
         }
         ++i;
@@ -97,7 +100,7 @@ int main(int argc, char* argv[]) {
             resources::image::BMP bmp;
             resources::image::load_file(argv[i], bmp);
             print_bitmap_data(bmp);
-            std::set<std::uint32_t> palette;
+            std::set<std::uint32_t> palette = {0};
             std::vector<std::uint8_t> data;
             index_bitmap_palette(bmp, palette, data);
             std::string filename{argv[1]};

@@ -1,2 +1,2 @@
-#!/usr/bin/zsh
+#!/usr/bin/bash
 g++ -o bmp2h main.cpp bmp.cpp -std=c++1y 2>&1

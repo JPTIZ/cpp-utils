@@ -1,4 +1,5 @@
 #include "bitmap.h"
+#include <iostream>
 
 namespace resources {
 namespace image {
@@ -47,11 +48,12 @@ void load_file(const std::string& filename, BMP& bmp) {
     read_data(bmp.important_colors, is);
     is.seekg(bmp.bid_offset);
     while (!is.eof()) {
-        COLORREF pixel{0};
         for (auto j = 0; j < bmp.width; ++j) {
+            COLORREF pixel{0};
             for (auto i = 0; i < bmp.bpp/8; ++i) {
                 pixel |= (is.get() << (16 - 8*i));
             }
+            std::cout << "Added pixel: " << pixel << " = [" << (pixel&0xFF) << ";" << ((pixel>>8)&0xFF) << ";" << ((pixel>>16)&0xFF) << "]\n";
             bmp.map.push_back(pixel);
             auto dummy = is.get() | is.get() | is.get() | is.get();
         }

@@ -38,15 +38,15 @@ void load_bmp(BMP& bmp, const std::string& filename) {
     auto& colors = bmp.palette;
     auto& data = bmp.data;
     for (auto i = 0u; i < bmp.width*bmp.height; ++i) {
-        auto r = ((unsigned int)is.get()*(2<<5)/(2<<8));
-        auto g = ((unsigned int)is.get()*(2<<5)/(2<<8));
-        auto b = ((unsigned int)is.get()*(2<<5)/(2<<8));
-        std::uint16_t pixel = r | (g<<5) | (b<<10);
+        auto b = ((std::uint16_t)is.get()*(2<<5)/(2<<8));
+        auto g = ((std::uint16_t)is.get()*(2<<5)/(2<<8));
+        auto r = ((std::uint16_t)is.get()*(2<<5)/(2<<8));
+        std::uint16_t pixel = r + (g<<5) + (b<<10);
         if (not palette.count(pixel)) {
             std::cout << "inserting {"
                 << r << " , "
                 << g << " , "
-                << b << "} to palette" << std::endl;
+                << b << "} = { " << pixel << " } to palette" << std::endl;
             colors.push_back(pixel);
             palette.insert(
                     std::pair<std::uint16_t, std::uint8_t>(
