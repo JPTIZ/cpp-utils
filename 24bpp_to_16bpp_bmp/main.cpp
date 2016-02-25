@@ -3,7 +3,7 @@
 #include "bmp.h"
 
 void nice() {
-    std::cout << "------------------_" << std::endl;
+    std::cout << "-------------------" << std::endl;
     std::cout << "nice!" << std::endl;
 }
 

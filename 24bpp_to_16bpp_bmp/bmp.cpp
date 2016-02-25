@@ -113,10 +113,11 @@ void convert_to_16bpp(BMP& bmp) {
 }
 
 void save_header(BMP& bmp, const std::string& filename) {
-    std::cout << "saving header..." << std::endl;
-    std::ofstream os{filename+".h", std::ios::binary};
-    std::string filename_{filename};
-    filename_ = filename_.substr(0, filename_.find_last_of('.'));
+    std::string filename_ = filename.substr(0, filename.find_last_of('.'));
+    auto bar = filename_.find_last_of("\\/");
+    if (bar != std::string::npos) filename_ = filename_.substr(bar+1);
+    std::cout << "saving header : " << filename_ << " : ..." << std::endl;
+    std::ofstream os{filename_+".h", std::ios::binary};
     std::transform(
             filename_.begin(),
             filename_.end(),
@@ -125,7 +126,10 @@ void save_header(BMP& bmp, const std::string& filename) {
     auto guard_name = "GBA_GENERATED_BMP_" + filename_ + "_H";
     os << "#ifndef " << guard_name
         << "\n#define " << guard_name
-        << "\n\n#include <cstdint>\n\nconst std::uint16_t " << filename_ << "_palette[] = {\n  ";
+        << "\n\n#include <cstdint>\n\n"
+        << "const std::uint16_t " << filename_ << "_width = " << bmp.width << ";\n"
+        << "const std::uint16_t " << filename_ << "_height = " << bmp.height << ";\n\n"
+        << "const std::uint16_t " << filename_ << "_palette[] = {\n  ";
     auto i = 0u;
     for (auto it : bmp.palette) {
         if (i < bmp.palette.size()-1) {
