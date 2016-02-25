@@ -116,6 +116,7 @@ void save_header(BMP& bmp, const std::string& filename) {
     std::cout << "saving header..." << std::endl;
     std::ofstream os{filename+".h", std::ios::binary};
     std::string filename_{filename};
+    filename_ = filename_.substr(0, filename_.find_last_of('.'));
     std::transform(
             filename_.begin(),
             filename_.end(),
@@ -124,7 +125,7 @@ void save_header(BMP& bmp, const std::string& filename) {
     auto guard_name = "GBA_GENERATED_BMP_" + filename_ + "_H";
     os << "#ifndef " << guard_name
         << "\n#define " << guard_name
-        << "\nconst auto " << filename_ << "_palette = {\n  ";
+        << "\n\n#include <cstdint>\n\nconst std::uint16_t " << filename_ << "_palette[] = {\n  ";
     auto i = 0u;
     for (auto it : bmp.palette) {
         if (i < bmp.palette.size()-1) {
@@ -135,14 +136,14 @@ void save_header(BMP& bmp, const std::string& filename) {
         }
         ++i;
     }
-    os << "\nconst auto " << filename_ << "_data = {\n  ";
+    os << "\nconst std::uint8_t " << filename_ << "_data[] = {\n  ";
     i = 1u;
     for (auto it : bmp.data) {
         if (i < bmp.data.size()) {
             os << (unsigned int)it << ", ";
             if (i % 20 == 0) os << "\n  ";
         } else {
-            os << (unsigned int)it << "\n};\n\n";
+            os << (unsigned int)it << "\n};\n";
         }
         ++i;
     }
